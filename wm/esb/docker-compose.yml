@@ -20,31 +20,26 @@ version: "3.3"
 services:
   is:
 # Create the node using image. 
-    image: sag-is:105.0
-    restart: always
+    image: sag-is-pkg:105.100
+    restart: 'no'
     container_name: sag-isserver
     ports:                         # expose the um server port, mappedport:exposed port
-     - "5555:5555"
-     - "9999:9999"
-     - "15006:15006"
+     - "5520:5555"
+     - "9929:9999"
+     - "15206:15006"
     healthcheck:
       test: curl -sSf -u Administrator:manage http://localhost:5555/ > /dev/null || exit 1
       interval: 1m
       timeout: 30s
       retries: 3
     volumes:                       # Persisting the data directory
-     - data-server:/opt/softwareag
+     - /app/tools/msr/:/app/msr
     environment:                  # runtime parameters
-     - SERVICE_NAME=isserver
-     - IS_DB_URL=jdbc:mysql://192.168.50.101:3406/sagdb?relaxAutoCommit=true
-     - IS_DB_USER=saguser
-     - IS_DB_PWD={AES}Mgt1VgiF1DSURyXYlmtG8Q\=\=
-     - IS_REALM_URL=nsp://192.168.50.101:9010
-     - IS_ENV=DEV
+     - SAG_IS_CONFIG_PROPERTIES=/app/msr/application_dev.properties
   um:
 # Create the node using image. 
-    image:   sag-um:105.0
-    restart: always
+    image: sag-um:105.1
+    restart: 'no'
     container_name: sag-umserver
     ports:                         # expose the um server port, mappedport:exposed port
      - "9010:9000"
@@ -60,8 +55,8 @@ services:
      - MAX_DIRECT_MEM_SIZE=1G
      - BASIC_AUTH_ENABLE=N
      - BASIC_AUTH_MANDATORY=N
+    command: /opt/softwareag/UniversalMessaging/tools/runner/runUMTool.sh CreateChannel -rname=nsp://localhost:9000 -channelname=/wm/is/wm/prt/status/ChangeCommand
 volumes:
-  data-server:
   data:
   logs:
   licence:
