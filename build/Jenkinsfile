@@ -30,20 +30,28 @@ pipeline {
 	parameters {
 	    choice(
 		    choices: 'false\ntrue',
-		    description: 'Create base image',
-		    name: 'CREATE_BASE_IMAGE')
+		    description: 'Create base image (Integration Server)',
+		    name: 'CREATE_BASE_IMAGE_IS')
         string(
         	defaultValue: "x:x", 
-        	description: 'Base image name', 
-        	name: 'DOCKER_IMAGE_BASE')
+        	description: 'Base image name (Integration Server)', 
+        	name: 'DOCKER_IMAGE_BASE_IS')
 	    choice(
 		    choices: 'false\ntrue',
-		    description: 'Create package image',
+		    description: 'Create package image (Integration Server)',
 		    name: 'CREATE_PACKAGE_IMAGE')
         string(
         	defaultValue: "x:x", 
         	description: 'Package image name', 
         	name: 'DOCKER_IMAGE_PACKAGE')
+	    choice(
+		    choices: 'false\ntrue',
+		    description: 'Create base image (Universal Messaging)',
+		    name: 'CREATE_BASE_IMAGE_UM')
+        string(
+        	defaultValue: "x:x", 
+        	description: 'Base image name (Universal Messaging)', 
+        	name: 'DOCKER_IMAGE_BASE_UM')
         string(
         	defaultValue: "xxx", 
         	description: 'Build version', 
@@ -100,11 +108,11 @@ pipeline {
 	    
 		stage('Create IS base image') {
 			when {
-				expression {"${params.CREATE_BASE_IMAGE}" == "true"}
+				expression {"${params.CREATE_BASE_IMAGE_IS}" == "true"}
 			}
 			steps {
 				script {
-						createBaseImage(props,"${params.DOCKER_IMAGE_BASE}")
+						createBaseImage(props,"${params.DOCKER_IMAGE_BASE_IS}")
         			}
 				}
 			}	    
@@ -112,10 +120,10 @@ pipeline {
 	    stage ('Checkout source code') {
 			when {
     			anyOf {
-						expression { "${params.ENABLE_IS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_BPM_BUILD}" == 'true' }
-						expression { "${params.ENABLE_MWS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_UM_BUILD}" == 'true' }
+						expression { "${params.ENABLE_IS_BUILD}" == "true" }
+						expression { "${params.ENABLE_BPM_BUILD}" == "true" }
+						expression { "${params.ENABLE_MWS_BUILD}" == "true" }
+						expression { "${params.ENABLE_UM_BUILD}" == "true" }
     			}
 			}
 	        steps {
@@ -135,10 +143,10 @@ pipeline {
 		stage('Build source code') {
 			when {
     			anyOf {
-						expression { "${params.ENABLE_IS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_BPM_BUILD}" == 'true' }
-						expression { "${params.ENABLE_MWS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_UM_BUILD}" == 'true' }
+						expression { "${params.ENABLE_IS_BUILD}" == "true" }
+						expression { "${params.ENABLE_BPM_BUILD}" == "true" }
+						expression { "${params.ENABLE_MWS_BUILD}" == "true" }
+						expression { "${params.ENABLE_UM_BUILD}" == "true" }
     			}
 			}
 			steps {
@@ -151,16 +159,16 @@ pipeline {
 		stage ('Deploy source code') {
 			when {
     			anyOf {
-						expression { "${params.ENABLE_IS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_BPM_BUILD}" == 'true' }
-						expression { "${params.ENABLE_MWS_BUILD}" == 'true' }
-						expression { "${params.ENABLE_UM_BUILD}" == 'true' }
+						expression { "${params.ENABLE_IS_BUILD}" == "true" }
+						expression { "${params.ENABLE_BPM_BUILD}" == "true" }
+						expression { "${params.ENABLE_MWS_BUILD}" == "true" }
+						expression { "${params.ENABLE_UM_BUILD}" == "true" }
     			}
 			}		
 			parallel {
 				stage ('IS') {
 					when {
-						expression { "${params.ENABLE_IS_BUILD}" == 'true' }
+						expression { "${params.ENABLE_IS_BUILD}" == "true" }
 					}
 					steps {
 
@@ -172,7 +180,7 @@ pipeline {
 			    
 				stage ('BPM') {
 					when {
-						expression { "${params.ENABLE_BPM_BUILD}" == 'true' }
+						expression { "${params.ENABLE_BPM_BUILD}" == "true" }
 					}
 					steps {
 						createProject(props,"${dirWorkspace}","${dirUtils}","${params.MODULE}","*","BPM","${params.BUILD_VERSION}") 
@@ -181,7 +189,7 @@ pipeline {
 			    }
 				stage ('MWS') {
 					when {
-						expression { "${params.ENABLE_MWS_BUILD}" == 'true' }
+						expression { "${params.ENABLE_MWS_BUILD}" == "true" }
 					}
 					steps {
 						createProject(props,"${dirWorkspace}","${dirUtils}","${params.MODULE}","*","MWS","${params.BUILD_VERSION}") 
@@ -192,7 +200,7 @@ pipeline {
 
 				stage ('UM') {
 					when {
-						expression { "${params.ENABLE_UM_BUILD}" == 'true' }
+						expression { "${params.ENABLE_UM_BUILD}" == "true" }
 					}
 					steps {
 						createProject(props,"${dirWorkspace}","${dirUtils}","${params.MODULE}","*","UM","${params.BUILD_VERSION}") 
@@ -209,17 +217,35 @@ pipeline {
 			when {
 				allOf {
 					expression {"${params.CREATE_PACKAGE_IMAGE}" == "true"}
-					expression { "${params.ENABLE_IS_BUILD}" == 'true' || "${params.ENABLE_BPM_BUILD}" == 'true' }
+					expression { "${params.ENABLE_IS_BUILD}" == "true" || "${params.ENABLE_BPM_BUILD}" == "true" }
 				}
 			}
 			steps {
 				script {
 
-						createPackagesImage(props, "${dirUtils}","${dirWorkspace}","${params.DOCKER_IMAGE_BASE}","${params.DOCKER_IMAGE_PACKAGE}.${params.BUILD_VERSION}","${params.BUILD_VERSION}","${params.ENABLE_BPM_BUILD}")
+						createPackagesImage(props, "${dirUtils}","${dirWorkspace}","${params.DOCKER_IMAGE_BASE_IS}","${params.DOCKER_IMAGE_PACKAGE}.${params.BUILD_VERSION}","${params.BUILD_VERSION}","${params.ENABLE_BPM_BUILD}")
 
         			}  
 				}
-			}	
+			}
+			
+		stage('Create UM image') {
+			when {
+				allOf {
+					expression {"${params.CREATE_BASE_IMAGE_UM}" == "true"}
+					expression { "${params.ENABLE_UM_BUILD}" == "true" }
+				}
+			}
+			steps {
+				script {
+
+						createUniversalMessagingImage(props,"${params.DOCKER_IMAGE_BASE_UM}.${params.BUILD_VERSION}")
+
+        			}  
+				}
+			}			
+			
+			
 		}
 
 }
@@ -382,7 +408,7 @@ def deployProject(props, module, type, buildVersion) {
 def createBaseImage(props, baseImageName) {
     
 	dirSagInstall = props['dir.install.run']
-	dockerFileBase = props['docker.file.base']
+	dockerFileBase = props['docker.file.base.is']
 	
 	sh"${dirSagInstall}/IntegrationServer/docker/is_container.sh build -Dfile.name=${dockerFileBase} -Dimage.name=${baseImageName}"
 
@@ -400,7 +426,7 @@ def createPackagesImage(props, dirUtils, dirWorkspace, baseImageName, packageIma
 	sh "${dirSagInstall}/IntegrationServer/docker/is_container.sh createPackageDockerfile -Dimage.name=${baseImageName} -Dfile.name=${dockerfilePackage}"
 	
 	//If BPM build is enabled include PM in the package dockerfile
-	if ("${enableBpmBuild}" == 'true') {
+	if ("${enableBpmBuild}" == "true") {
 		includeDeployment (props, dirUtils, dirWorkspace, buildversion)
 	} else {
 			sh "echo 'HEALTHCHECK --interval=30s --timeout=20s --start-period=60s --retries=6 CMD curl -sSf localhost:${targetPort}/invoke/wm.server/ping/ > /dev/null || exit 1' >> ${dirSagInstall}/IntegrationServer/instances/default/packages/${dockerfilePackage}"
@@ -437,6 +463,16 @@ def includeDeployment (props, dirUtils, dirWorkspace, buildversion) {
    sh "echo 'HEALTHCHECK --interval=30s --timeout=20s --start-period=60s --retries=6 CMD \${SAG_HOME}/IntegrationServer/instances/\${INSTANCE_NAME}/packages/${dirFolderDeploy}/is-health-check.sh' >> ${dirSagInstall}/IntegrationServer/instances/default/packages/${dockerfilePackage}"              
 
 
+}
+
+def createUniversalMessagingImage(props, baseImageName) {
+
+    dirSagInstall=props['dir.install.um']
+	dockerfileUm = props['docker.file.base.um']
+	
+	sh "cd ${dirSagInstall} && docker build  --tag ${baseImageName} ."
+	
+   
 }
 
 

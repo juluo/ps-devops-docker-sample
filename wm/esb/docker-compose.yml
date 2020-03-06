@@ -17,12 +17,20 @@
 #   limitations under the License.
 #################################################################################
 version: "3.3"
+
+#secrets:                        # top level secrets block
+#  wm-is-admin-pass:
+#    file: ./secrets.txt
+
 services:
   is:
 # Create the node using image. 
-    image: sag-is-pkg:105.100
+    image: ${IS_DOCKER_IMAGE}
     restart: 'no'
-    container_name: sag-isserver
+    hostname: ${IS_CONTAINER_HOSTNAME}
+    container_name: ${IS_CONTAINER_NAME}
+    networks:
+     - esb_stack_net
     ports:                         # expose the um server port, mappedport:exposed port
      - "5520:5555"
      - "9929:9999"
@@ -34,13 +42,21 @@ services:
       retries: 3
     volumes:                       # Persisting the data directory
      - /app/tools/msr/:/app/msr
-    environment:                  # runtime parameters
+    environment:                   # runtime parameters
      - SAG_IS_CONFIG_PROPERTIES=/app/msr/application_dev.properties
+#     - SAG_IS_ADMIN_PWD=/run/secrets/wm-is-admin-pass
+    links:
+     - um
+#    secrets:
+#     - wm-is-admin-pass
   um:
 # Create the node using image. 
-    image: sag-um:105.1
+    image: ${UM_DOCKER_IMAGE}
     restart: 'no'
-    container_name: sag-umserver
+    hostname: ${UM_CONTAINER_HOSTNAME}
+    container_name: ${UM_CONTAINER_NAME}
+    networks:
+     - esb_stack_net
     ports:                         # expose the um server port, mappedport:exposed port
      - "9010:9000"
     volumes:                       # Persisting the data directory
@@ -61,3 +77,7 @@ volumes:
   logs:
   licence:
   conf:
+  
+networks:
+  esb_stack_net:
+    driver: bridge

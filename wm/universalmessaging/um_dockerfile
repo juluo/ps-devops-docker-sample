@@ -1,3 +1,0 @@
-FROM  store/softwareag/universalmessaging-server:10.5
-
-COPY 
