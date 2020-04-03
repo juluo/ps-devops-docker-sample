@@ -36,6 +36,11 @@ if [ -z "$DIR_REPOSITORY" ]; then
     DIR_REPOSITORY=$DIR_DEPLOY/repository
 fi
 
+if [ -z "$IS_PROTOCOL" ]; then
+    echo "# IS_PROTOCOL environment variable is not defined, using default value localhost"
+    IS_PROTOCOL="http"
+fi
+
 if [ -z "$IS_HOST" ]; then
     echo "# IS_HOST environment variable is not defined, using default value localhost"
     IS_HOST="localhost"
@@ -120,7 +125,7 @@ main() {
 	
 	base_directory=$(dirname "$0")
 	# Set log file 
-	log_file="${base_directory}/auto_deploy.log"
+	log_file="${base_directory}/is_auto_deploy.log"
 	
 	if [ ! -f "$log_file" ];
 	then

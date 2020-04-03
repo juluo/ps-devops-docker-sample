@@ -7,6 +7,9 @@ run_post_startup() {
   if [ -f "${base_directory}/is-auto-deploy.sh" ] ; then
     sh "${base_directory}/is-auto-deploy.sh"
   fi
+  if [ -f "${base_directory}/um-auto-deploy.sh" ] ; then
+    sh "${base_directory}/um-auto-deploy.sh"
+  fi
   echo "Finished running post statrup scripts..."
   
 }
