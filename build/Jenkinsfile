@@ -102,20 +102,7 @@ pipeline {
 					    mkdir -p ${dirWorkspace}/builds;"
 	            }
 	        }
-	    }
-	    
-	    /** Create a docker base image from a generated dockerfile ${dockerFileBase} **/
-	    
-		stage('Create IS base image') {
-			when {
-				expression {"${params.CREATE_BASE_IMAGE_IS}" == "true"}
-			}
-			steps {
-				script {
-						createBaseImage(props,"${params.DOCKER_IMAGE_BASE_IS}")
-        			}
-				}
-			}	    
+	    }    
 	    
 	    stage ('Checkout source code') {
 			when {
@@ -212,6 +199,20 @@ pipeline {
 			}	
 		}
 
+	    /** Create a docker base image **/
+	    
+		stage('Create IS base image') {
+			when {
+				expression {"${params.CREATE_BASE_IMAGE_IS}" == "true"}
+			}
+			steps {
+				script {
+						createBaseImage(props,"${params.DOCKER_IMAGE_BASE_IS}")
+        			}
+				}
+			}
+
+	    /** Create a docker package image **/
 
 		stage('Create IS package image') {
 			when {
